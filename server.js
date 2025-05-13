@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const bearerToken = process.env.TWITTER_BEARER_TOKEN;
+const apiKey = process.env.TWITTER_API_KEY;
+// ...etc
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
