@@ -1,3 +1,9 @@
+const path = require("path");
+
+app.get("/openapi.json", (req, res) => {
+  res.sendFile(path.join(__dirname, "openapi.json"));
+});
+
 const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 3000;
