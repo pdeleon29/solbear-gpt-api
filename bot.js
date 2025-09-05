@@ -20,28 +20,38 @@ const LINKS = [
   'https://t.me/SOLBEAROfficial',
 ];
 
-// 1. Post a tweet with trending hashtags
-async function postMarketingTweet() {
-  const text = `Join the $SOLBEAR movement! ${HASHTAGS.join(' ')}\n${LINKS[0]}`;
+// 1. Scheduled AI-Generated Tweets
+async function postAIGeneratedTweet() {
   try {
+    const prompt = `Write a fun, hype tweet about $SOLBEAR, a Solana meme coin. Include one or more of these hashtags: ${HASHTAGS.join(', ')}. Mention the community and the website: ${LINKS[0]}`;
+    const completion = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const text = completion.data.choices[0].message.content;
     const { data } = await client.v2.tweet(text);
-    console.log('Marketing tweet posted:', data);
+    console.log('AI-generated tweet posted:', data);
   } catch (err) {
-    console.error('Error posting marketing tweet:', err);
+    console.error('Error posting AI-generated tweet:', err);
   }
 }
 
-// 2. Auto-reply to mentions
-async function autoReplyMentions() {
+// 2. Auto-reply to mentions with AI
+async function autoReplyMentionsWithAI() {
   try {
     const mentions = await client.v2.userMentionTimeline('me', { max_results: 5 });
     for (const mention of mentions.data?.data || []) {
-      const replyText = `Thanks for supporting $SOLBEAR! ${HASHTAGS[0]}`;
+      const prompt = `Reply to this tweet in a fun, friendly, and meme-coin style. Tweet: "${mention.text}". Use $SOLBEAR branding and hashtags.`;
+      const completion = await openai.createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+      });
+      const replyText = completion.data.choices[0].message.content;
       await client.v2.reply(replyText, mention.id);
-      console.log('Auto-replied to mention:', mention.id);
+      console.log('AI auto-replied to mention:', mention.id);
     }
   } catch (err) {
-    console.error('Error auto-replying to mentions:', err);
+    console.error('Error auto-replying to mentions with AI:', err);
   }
 }
 
@@ -66,16 +76,27 @@ async function aiTweet(prompt) {
   }
 }
 
-// 5. Auto-retweet community tweets with hashtags
-async function autoRetweetHashtags() {
+// 3. Community Engagement: Like, retweet, and reply to tweets with your hashtags
+async function engageWithCommunity() {
   try {
     const search = await client.v2.search(HASHTAGS.join(' OR '), { max_results: 5 });
     for (const tweet of search.data?.data || []) {
+      // Like
+      await client.v2.like('me', tweet.id);
+      // Retweet
       await client.v2.retweet('me', tweet.id);
-      console.log('Auto-retweeted:', tweet.id);
+      // AI reply
+      const prompt = `Reply to this tweet as the $SOLBEAR meme coin mascot. Tweet: "${tweet.text}". Use humor and hashtags.`;
+      const completion = await openai.createChatCompletion({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+      });
+      const replyText = completion.data.choices[0].message.content;
+      await client.v2.reply(replyText, tweet.id);
+      console.log('Engaged with community tweet:', tweet.id);
     }
   } catch (err) {
-    console.error('Error auto-retweeting:', err);
+    console.error('Error engaging with community:', err);
   }
 }
 
@@ -92,24 +113,30 @@ async function welcomeNewFollowers() {
   }
 }
 
-// 7. Track hashtag usage (prints to console)
-async function trackHashtagUsage() {
+// 5. Trending Hashtag Monitor: Print trending topics related to Solana/meme coins
+async function monitorTrendingHashtags() {
   try {
+    // Twitter API v2 does not provide direct trending topics, so this is a placeholder for future expansion.
+    // For now, just print recent tweets with your hashtags.
     const search = await client.v2.search(HASHTAGS.join(' OR '), { max_results: 10 });
     console.log('Recent hashtag usage:');
     for (const tweet of search.data?.data || []) {
       console.log(`@${tweet.author_id}: ${tweet.text}`);
     }
   } catch (err) {
-    console.error('Error tracking hashtags:', err);
+    console.error('Error monitoring trending hashtags:', err);
   }
 }
 
-// Example: Run all features once on startup
+// Example: Run prioritized features on startup and schedule AI tweets
 (async () => {
-  await postMarketingTweet();
-  await autoReplyMentions();
-  await autoRetweetHashtags();
-  await welcomeNewFollowers();
-  await trackHashtagUsage();
+  await postAIGeneratedTweet();
+  await autoReplyMentionsWithAI();
+  await engageWithCommunity();
+  await monitorTrendingHashtags();
 })();
+
+// Schedule AI-generated tweets every 6 hours
+cron.schedule('0 */6 * * *', () => {
+  postAIGeneratedTweet();
+});
