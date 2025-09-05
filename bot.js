@@ -29,8 +29,9 @@ async function postAIGeneratedTweet() {
       messages: [{ role: 'user', content: prompt }],
     });
     const text = completion.data.choices[0].message.content;
-    const { data } = await client.v2.tweet(text);
-    console.log('AI-generated tweet posted:', data);
+  const { data } = await client.v2.tweet(text);
+  const tweetUrl = `https://x.com/solbearcoin/status/${data.id}`;
+  console.log('AI-generated tweet posted:', tweetUrl);
   } catch (err) {
     console.error('Error posting AI-generated tweet:', err);
   }
@@ -47,8 +48,9 @@ async function autoReplyMentionsWithAI() {
         messages: [{ role: 'user', content: prompt }],
       });
       const replyText = completion.data.choices[0].message.content;
-      await client.v2.reply(replyText, mention.id);
-      console.log('AI auto-replied to mention:', mention.id);
+  const reply = await client.v2.reply(replyText, mention.id);
+  const replyUrl = `https://x.com/solbearcoin/status/${reply.data.id}`;
+  console.log('AI auto-replied to mention:', replyUrl);
     }
   } catch (err) {
     console.error('Error auto-replying to mentions with AI:', err);
@@ -84,7 +86,7 @@ async function engageWithCommunity() {
       // Like
       await client.v2.like('me', tweet.id);
       // Retweet
-      await client.v2.retweet('me', tweet.id);
+      const retweet = await client.v2.retweet('me', tweet.id);
       // AI reply
       const prompt = `Reply to this tweet as the $SOLBEAR meme coin mascot. Tweet: "${tweet.text}". Use humor and hashtags.`;
       const completion = await openai.createChatCompletion({
@@ -92,8 +94,11 @@ async function engageWithCommunity() {
         messages: [{ role: 'user', content: prompt }],
       });
       const replyText = completion.data.choices[0].message.content;
-      await client.v2.reply(replyText, tweet.id);
-      console.log('Engaged with community tweet:', tweet.id);
+      const reply = await client.v2.reply(replyText, tweet.id);
+      const tweetUrl = `https://x.com/solbearcoin/status/${tweet.id}`;
+      const replyUrl = `https://x.com/solbearcoin/status/${reply.data.id}`;
+      console.log('Engaged with community tweet:', tweetUrl);
+      console.log('AI replied to community tweet:', replyUrl);
     }
   } catch (err) {
     console.error('Error engaging with community:', err);
